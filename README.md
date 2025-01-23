@@ -1,66 +1,136 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Laravel Project: Golim Admin Panel
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Project Overview
+Golim Admin Panel is a Laravel-based application designed to manage the administrative tasks of Grace Operated Life International Ministry (Golim). It provides a secure platform for church administrators to handle member information, events, announcements, and other ministry operations.
 
-## About Laravel
+## Features
+- Secure manual authentication system using Laravel's basic auth
+- Error handling with user-friendly feedback
+- Responsive design for desktop and mobile users
+- Role-based access control for admins and users
+- Dynamic links to the church’s main website
+- Paystack and PayPal integration for online donations
+- Fully blade-based frontend with advanced Bootstrap components
+- Admin control over all user-facing content without manual code editing
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Technology Stack
+- **Backend Framework:** Laravel (PHP)
+- **Frontend Framework:** Blade templating engine with Bootstrap
+- **Database:** MySQL
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Prerequisites
+Before running this project, ensure you have the following installed:
+- PHP >= 8.0
+- Composer
+- MySQL
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Installation Guide
 
-## Learning Laravel
+1. **Clone the Repository**
+```bash
+git clone <repository-url>
+cd <repository-folder>
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+2. **Install Dependencies**
+```bash
+composer install
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+3. **Set Up Environment Variables**
+Copy the `.env.example` file to `.env` and update the configuration:
+```bash
+cp .env.example .env
+```
+Update the following fields in the `.env` file:
+- `APP_NAME`
+- `APP_URL`
+- `DB_DATABASE`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+- `PAYPAL_CLIENT_ID`
+- `PAYPAL_CLIENT_SECRET`
+- `PAYPAL_MODE` (use `sandbox` for testing and `live` for production)
+- `PAYSTACK_PUBLIC_KEY`
+- `PAYSTACK_SECRET_KEY`
+- `PAYSTACK_PAYMENT_URL` (default: `https://api.paystack.co/transaction/initialize`)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+4. **Generate Application Key**
+```bash
+php artisan key:generate
+```
 
-## Laravel Sponsors
+5. **Run Migrations**
+```bash
+php artisan migrate
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+6. **Seed the Database (Optional)**
+If your project includes seeder files, run:
+```bash
+php artisan db:seed
+```
 
-### Premium Partners
+7. **Run the Application**
+```bash
+php artisan serve
+```
+Visit the application at `http://localhost:8000`.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+## File Structure
+```plaintext
+├── app/
+├── bootstrap/
+├── config/
+├── database/
+├── public/
+├── resources/
+├── routes/
+├── storage/
+├── tests/
+└── vendor/
+```
 
-## Contributing
+## Routes
+Here are some of the important routes:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- **Authentication**:
+  - `/login`: Login page for admins
+  - `/logout`: Logout route
 
-## Code of Conduct
+- **Public Pages**:
+  - `/`: Link to the main church website
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- **Donations**:
+  - Paystack and PayPal payment endpoints are configured in `.env`. Ensure valid credentials are used.
 
-## Security Vulnerabilities
+## Contribution Guide
+1. Fork the repository.
+2. Create a new branch for your feature or bugfix:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+3. Commit your changes:
+   ```bash
+   git commit -m "Add your message here"
+   ```
+4. Push to your branch:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+5. Submit a pull request.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Troubleshooting
+- Check if the `.env` file is correctly set up.
+- Ensure you have run all migrations and seeders.
+- Verify that the `storage` and `bootstrap/cache` directories are writable:
+  ```bash
+  chmod -R 775 storage bootstrap/cache
+  ```
 
 ## License
+This project is licensed under the MIT License.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Acknowledgments
+Special thanks to the team and community supporting the development of this project. For more information about Golim, visit [Grace Operated Life International Ministry](#).
+
