@@ -40,10 +40,18 @@
                             </div>
 
                             <!-- Date -->
-                            <div class="mb-6">
+                            {{-- <div class="mb-6">
                                 <label class="form-label" for="date">Date</label>
                                 <input type="date" id="date" name="date" class="form-control"
-                                    value="{{ old('date', $sermon->date) }}" required>
+                                    value="{{ old('date', optional($sermon->datetime)->format('Y-m-d\TH:i')) }}" required>
+                            </div> --}}
+
+                            <!-- Date and Time -->
+                            <div class="mb-6">
+                                <label class="form-label" for="date">Date & Time:</label>
+                                <input type="datetime-local" id="date" name="date" class="form-control"
+                                    value="{{ old('date', isset($sermon->date) ? $sermon->date->format('Y-m-d\TH:i') : '') }}"
+                                    required>
                             </div>
 
                             <!-- Button Text -->

@@ -58,7 +58,20 @@
         </li>
 
         <!-- Settings -->
-        <li class="menu-item {{ request()->routeIs('admin.setting.hero.list', 'admin.setting.recent.list', 'admin.setting.upcoming.list', 'admin.setting.about.list', 'admin.setting.testimony.list') ? 'active open' : '' }}">
+        @php
+            use Illuminate\Support\Str;
+            $isSeoActive = Str::contains(request()->path(), 'admin/settings/seo');
+        @endphp
+        <li
+            class="menu-item {{ request()->routeIs(
+                'admin.setting.hero.list',
+                'admin.setting.recent.list',
+                'admin.setting.upcoming.list',
+                'admin.setting.about.list',
+                'admin.setting.testimony.list',
+            ) || $isSeoActive
+                ? 'active open'
+                : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="menu-icon tf-icons bx bx-cog"></i>
                 <div>Settings</div>
@@ -92,6 +105,14 @@
                     <a href="{{ route('admin.setting.testimony.list') }}" class="menu-link">
                         <i class="menu-icon tf-icons bx bx-chat"></i>
                         <div>Testimony Management</div>
+                    </a>
+                </li>
+
+
+                <li class="menu-item {{ $isSeoActive ? 'active' : '' }}">
+                    <a href="{{ route('seo.index') }}" class="menu-link">
+                        <i class="menu-icon tf-icons bx bx-chalkboard"></i>
+                        <div>SEO Management</div>
                     </a>
                 </li>
             </ul>

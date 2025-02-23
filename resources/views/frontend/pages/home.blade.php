@@ -174,8 +174,35 @@
 @endsection
 
 
-
 <script>
+    // Ensure the date is passed in the correct ISO format
+    var countdownDate = new Date("{{ \Carbon\Carbon::parse($upcomingSermon['date'])->format('Y-m-d\TH:i:s') }}")
+        .getTime();
+
+    var x = setInterval(function() {
+        var now = new Date().getTime();
+        var distance = countdownDate - now;
+
+        var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        document.getElementById("days").innerHTML = days;
+        document.getElementById("hours").innerHTML = hours;
+        document.getElementById("minutes").innerHTML = minutes;
+        document.getElementById("seconds").innerHTML = seconds;
+
+        // If the countdown is finished, display a message
+        if (distance < 0) {
+            clearInterval(x);
+            document.getElementById("clockdiv").innerHTML = "The sermon has started!";
+        }
+    }, 1000);
+</script>
+
+
+{{-- <script>
     // Countdown Timer Script
     var countdownDate = new Date("{{ $upcomingSermon['date'] }}").getTime();
 
@@ -199,4 +226,4 @@
             document.getElementById("clockdiv").innerHTML = "The sermon has started!";
         }
     }, 1000);
-</script>
+</script> --}}

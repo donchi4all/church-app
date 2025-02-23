@@ -13,6 +13,8 @@ class PrayerRequestController extends Controller
             'title' => 'required',
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
+            'email' => 'required|email',
+            'phone' => ['required', 'regex:/^\+?[0-9]{7,15}$/'],
             'last_name' => 'required|string|max:255',
             'state_country' => 'required|string|max:255',
             'request' => 'required|string',
@@ -43,7 +45,7 @@ class PrayerRequestController extends Controller
                 ->paginate(10); // You can adjust the pagination limit as needed
         }
         // Paginate the results
-        $prayerRequests = $query->paginate(10);
+        $prayerRequests = $query->orderByDesc('created_at')->paginate(10);
         // Fetch donations with pagination
         // $donations = Donation::paginate(10); // 10 donations per page
         return view('backend.pages.prayer-request', compact('prayerRequests'));

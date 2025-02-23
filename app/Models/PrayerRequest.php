@@ -15,5 +15,7 @@ class PrayerRequest extends Model
         'last_name',
         'state_country',
         'request',
+        'phone',
+        'email'
     ];
 }

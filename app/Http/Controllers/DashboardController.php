@@ -179,7 +179,7 @@ class DashboardController extends Controller
     public function listUpcomingSermon()
     {
         $sermon = UpcomingSermon::first();
-        $sermon->date = Carbon::parse($sermon->date)->format('Y-m-d');
+        // $sermon->date = Carbon::parse($sermon->date)->format('Y-m-d');
         // dd($sermon->date );
         return view('backend.pages.upcoming-sermon', compact('sermon'));
     }

@@ -17,5 +17,6 @@ class Donation extends Model
         'payment_method',
         'transaction_reference',
         'status',
+        'phone'
     ];
 }

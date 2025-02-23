@@ -28,44 +28,63 @@
                                 <th>First Name</th>
                                 <th>Middle Name</th>
                                 <th>Last Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
                                 <th>State/Country</th>
                                 <th>Request</th>
-                                <th>Actions</th>
+                                <th>Created At</th>
                             </tr>
                         </thead>
                         <tbody class="table-border-bottom-0">
                             @forelse ($prayerRequests as $prayerRequest)
                                 <tr>
-                                    <td>{{ $prayerRequest->title }}</td>
-                                    <td>{{ $prayerRequest->first_name }}</td>
-                                    <td>{{ $prayerRequest->middle_name ?? 'N/A' }}</td>
-                                    <td>{{ $prayerRequest->last_name }}</td>
-                                    <td>{{ $prayerRequest->state_country }}</td>
-                                    <td>{{ Str::limit($prayerRequest->request, 50) }}</td>
-
+                                    @foreach (['title', 'first_name', 'middle_name', 'last_name', 'email', 'phone', 'state_country'] as $field)
+                                        <td>{{ $prayerRequest->$field ?? 'N/A' }}</td>
+                                    @endforeach
                                     <td>
-                                        <div class="dropdown">
-                                            <button type="button" class="btn p-0 dropdown-toggle hide-arrow"
-                                                data-bs-toggle="dropdown">
-                                                <i class="bx bx-dots-vertical-rounded"></i>
-                                            </button>
-                                            <div class="dropdown-menu">
-                                                <a class="dropdown-item" href="javascript:void(0);">
-                                                    <i class="bx bx-edit-alt me-1"></i> Edit
-                                                </a>
-                                                <a class="dropdown-item" href="javascript:void(0);">
-                                                    <i class="bx bx-trash me-1"></i> Delete
-                                                </a>
+                                        <!-- View Request Button (Triggers Modal) -->
+                                        <button class="btn btn-link text-primary p-0" type="button" data-bs-toggle="modal"
+                                            data-bs-target="#requestModal-{{ $prayerRequest->id }}">
+                                            View Request
+                                        </button>
+
+                                        <!-- Modal -->
+                                        <div class="modal fade" id="requestModal-{{ $prayerRequest->id }}" tabindex="-1"
+                                            aria-labelledby="requestModalLabel-{{ $prayerRequest->id }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-lg">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title"
+                                                            id="requestModalLabel-{{ $prayerRequest->id }}">
+                                                            Prayer Request Details
+                                                        </h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                            aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p class="text-muted">
+                                                            <strong>Name:</strong> {{ $prayerRequest->first_name }}
+                                                            {{ $prayerRequest->last_name }}<br>
+                                                            <strong>Email:</strong> {{ $prayerRequest->email }}<br>
+                                                            <strong>Phone:</strong> {{ $prayerRequest->phone }}
+                                                        </p>
+                                                        <hr>
+                                                        <p style="white-space: pre-line;">{{ $prayerRequest->request }}</p>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
+                                    <td>{{ optional($prayerRequest->created_at)->format('F j, Y g:i A') ?? 'N/A' }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center">No prayer requests found</td>
+                                    <td colspan="9" class="text-center">No prayer requests found</td>
                                 </tr>
                             @endforelse
                         </tbody>
+
+
                     </table>
 
                     <!-- Pagination -->

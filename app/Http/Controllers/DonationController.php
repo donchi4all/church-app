@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Donation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Srmklive\PayPal\Services\PayPal as PayPalClient;
 
@@ -13,66 +14,128 @@ class DonationController extends Controller
 {
     public function payWithPaystack(Request $request)
     {
-        $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|email',
-            'amount' => 'required|numeric|min:1',
-        ]);
+        try {
+            $validated = $request->validate([
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'email' => 'required|email',
+                'phone' => ['required', 'regex:/^\+?[0-9]{7,15}$/'],
+                'amount' => 'required|numeric|min:1',
+            ]);
 
-        // Create a donation record
-        $donation = Donation::create([
-            'donor_name' => $request->first_name . ' ' . $request->last_name,
-            'email' => $request->email,
-            'amount' => $request->amount,
-            'currency' => 'NGN',
-            'payment_method' => 'paystack',
-            'transaction_reference' => Str::random(12), // Unique reference
-            'status' => 'pending',
-        ]);
+            // Create a donation record
+            $donation = Donation::create([
+                'donor_name' => $validated['first_name'] . ' ' . $validated['last_name'],
+                'email' => $validated['email'],
+                'amount' => $validated['amount'],
+                'phone' => $validated['phone'],
+                'currency' => 'NGN',
+                'payment_method' => 'paystack',
+                'transaction_reference' => Str::random(12),
+                'status' => 'pending',
+            ]);
 
-        $paystackUrl = env('PAYSTACK_PAYMENT_URL', 'https://api.paystack.co/transaction/initialize');
-        $secretKey = env('PAYSTACK_SECRET_KEY');
+            $paystackUrl = config('services.paystack.public_url', 'https://api.paystack.co/transaction/initialize');
+            $secretKey = config('services.paystack.secret_key');
 
-        $response = Http::withToken($secretKey)->post($paystackUrl, [
-            'email' => $request->email,
-            'amount' => $request->amount * 100, // Convert to kobo
-            'callback_url' => route('donate.paystack.callback'),
-            'reference' => $donation->transaction_reference,
-        ]);
+            // Ensure the secret key is not empty
+            if (empty($secretKey)) {
+                Log::error('Paystack Secret Key is missing.');
+                return back()->with('error', 'Payment gateway configuration error.');
+            }
 
-        $responseData = $response->json();
+            // Send the request with the correct Authorization header format
+            $response = Http::withHeaders([
+                'Authorization' => "Bearer {$secretKey}", // ✅ Correct format
+                'Content-Type' => 'application/json',
+            ])->post($paystackUrl, [
+                        'email' => $validated['email'],
+                        'amount' => $validated['amount'] * 100, // Convert to kobo
+                        'callback_url' => route('donate.paystack.callback'),
+                        'reference' => $donation->transaction_reference,
+                    ]);
 
-        if ($responseData['status']) {
-            return redirect($responseData['data']['authorization_url']);
+            $responseData = $response->json();
+
+            // Log the Paystack response for debugging
+            Log::info('Paystack Response:', ['response' => $responseData]);
+
+            if ($responseData['status'] ?? false) {
+                return redirect($responseData['data']['authorization_url']);
+            }
+
+            // Log the failure reason
+            Log::error('Paystack Payment Failed', ['response' => $responseData]);
+            return back()->with('error', $responseData['message'] ?? 'Unable to process payment at the moment.');
+
+        } catch (\Exception $e) {
+            Log::error('Paystack Payment Exception:', ['error' => $e->getMessage()]);
+            return back()->with('error', 'An unexpected error occurred. Please try again.');
         }
-
-        return back()->with('error', 'Unable to process payment at the moment.');
-
     }
 
     public function paystackCallback(Request $request)
     {
-
         $reference = $request->get('reference');
 
-        $secretKey = env('PAYSTACK_SECRET_KEY');
+        if (!$reference) {
+            return redirect()->route('donation')->with('error', 'Invalid payment reference.');
+        }
 
-        // Verify payment
-        $response = Http::withToken(env('PAYSTACK_SECRET_KEY'))
-            ->get("https://api.paystack.co/transaction/verify/{$reference}");
+        // Fetch the donation record
+        $donation = Donation::where('transaction_reference', $reference)->first();
 
-        $donation = Donation::where('transaction_reference', $reference)->firstOrFail();
+        if (!$donation) {
+            return redirect()->route('donation')->with('error', 'Donation not found.');
+        }
 
-        if ($response->successful() && $response->json('data.status') === 'success') {
+        $paystackUrl = "https://api.paystack.co/transaction/verify/{$reference}";
+        $secretKey = config('services.paystack.secret_key');
+
+        // Verify payment status
+        $response = Http::withHeaders([
+            'Authorization' => "Bearer {$secretKey}",
+            'Content-Type' => 'application/json',
+        ])->get($paystackUrl);
+
+        $responseData = $response->json();
+
+        Log::info('Paystack Verification Response:', ['response' => $responseData]);
+
+        if ($responseData['status'] && isset($responseData['data']['status']) && $responseData['data']['status'] === 'success') {
+            // Mark donation as successful
             $donation->update(['status' => 'success']);
             return redirect()->route('donation')->with('success', 'Donation successful!');
         }
 
+        // If transaction is not successful, mark it as failed
         $donation->update(['status' => 'failed']);
-        return redirect()->route('donation')->with('error', 'Payment failed.');
-
+        return redirect()->route('donation')->with('error', 'Payment verification failed.');
     }
+
+
+    // public function paystackCallback(Request $request)
+    // {
+
+    //     $reference = $request->get('reference');
+
+    //     $secretKey = env('PAYSTACK_SECRET_KEY');
+
+    //     // Verify payment
+    //     $response = Http::withToken(env('PAYSTACK_SECRET_KEY'))
+    //         ->get("https://api.paystack.co/transaction/verify/{$reference}");
+
+    //     $donation = Donation::where('transaction_reference', $reference)->firstOrFail();
+
+    //     if ($response->successful() && $response->json('data.status') === 'success') {
+    //         $donation->update(['status' => 'success']);
+    //         return redirect()->route('donation')->with('success', 'Donation successful!');
+    //     }
+
+    //     $donation->update(['status' => 'failed']);
+    //     return redirect()->route('donation')->with('error', 'Payment failed.');
+
+    // }
 
 
     /**
@@ -83,6 +146,7 @@ class DonationController extends Controller
         $request->validate([
             'first_name' => 'required|string',
             'email' => 'required|email',
+            'phone' => ['required', 'regex:/^\+?[0-9]{7,15}$/'],
             'amount' => 'required|numeric|min:1',
         ]);
 
@@ -92,15 +156,16 @@ class DonationController extends Controller
             'donor_name' => $request->first_name,
             'email' => $request->email,
             'amount' => $request->amount,
+            'phone' => $request->phone,
             'currency' => 'USD',
             'payment_method' => 'paypal',
             'transaction_reference' => $transactionReference, // Unique reference
             'status' => 'pending',
         ]);
 
-        $clientId = env('PAYPAL_CLIENT_ID');
-        $clientSecret = env('PAYPAL_CLIENT_SECRET');
-        $url = env('PAYPAL_MODE') == 'sandbox'
+        $clientId = config('services.paypal.client_id');
+        $clientSecret = config('services.paypal.client_secret');
+        $url = config('services.paypal.mode') == 'sandbox'
             ? 'https://api-m.sandbox.paypal.com/v2/checkout/orders'
             : 'https://api-m.paypal.com/v2/checkout/orders';
 
@@ -144,36 +209,63 @@ class DonationController extends Controller
      */
     public function handlePaypalCallback(Request $request)
     {
+        try {
+            $orderId = $request->get('token'); // PayPal Order ID
+            $reference = $request->get('reference');
+            $payerID = $request->get('PayerID');
 
-        $token = $request->get('token');
-        $reference = $request->get('reference');
-        $payerID = $request->get('PayerID');
+            // $clientId = env('PAYPAL_CLIENT_ID');
+            // $clientSecret = env('PAYPAL_CLIENT_SECRET');
 
-        $clientId = env('PAYPAL_CLIENT_ID');
-        $clientSecret = env('PAYPAL_CLIENT_SECRET');
-        $url = env('PAYPAL_MODE') == 'sandbox'
-            ? 'https://api-m.sandbox.paypal.com/v2/checkout/orders'
-            : 'https://api-m.paypal.com/v2/checkout/orders';
+            $clientId = config('services.paypal.client_id');
+            $clientSecret = config('services.paypal.client_secret');
 
+            // Determine PayPal API URL
+            $url = config('services.paypal.mode') == 'sandbox'
+                ? "https://api-m.sandbox.paypal.com/v2/checkout/orders/{$orderId}"
+                : "https://api-m.paypal.com/v2/checkout/orders/{$orderId}";
 
-        $response = Http::withBasicAuth($clientId, $clientSecret)
-            ->get($url . "/{$token}");
+            // Make request to PayPal API
+            $response = Http::withBasicAuth($clientId, $clientSecret)->get($url);
 
+            if (!$response->successful()) {
+                return redirect()->route('donation')->with('error', 'Failed to verify payment.');
+            }
 
-        $donation = Donation::where('transaction_reference', $reference)->orWhere('transaction_reference', $token)->firstOrFail();
+            $orderStatus = $response->json('status'); // Get payment status
 
-        if ($response->successful() && ($response->json('status') === 'COMPLETED' || $response->json('status') === 'APPROVED')) {
-            if ($token)
-                $reference = $token;
-            $donation->update(['status' => 'success', 'transaction_reference' => $reference]);
-            return redirect()->route('donation')->with('success', 'Donation successful!');
+            // Find the donation record
+            $donation = Donation::where('transaction_reference', $reference)
+                ->orWhere('transaction_reference', $orderId)
+                ->first();
+
+            if (!$donation) {
+                return redirect()->route('donation')->with('error', 'Donation record not found.');
+            }
+
+            // Check if the order is completed
+            if (in_array($orderStatus, ['COMPLETED', 'APPROVED'])) {
+                $donation->update([
+                    'status' => 'success',
+                    'transaction_reference' => $orderId ?? $reference,
+                ]);
+
+                return redirect()->route('donation')->with('success', 'Donation successful!');
+            }
+
+            // If payment fails, update status
+            $donation->update([
+                'status' => 'failed',
+                'transaction_reference' => $orderId ?? $reference,
+            ]);
+
+            return redirect()->route('donation')->with('error', 'Payment failed.');
+        } catch (\Exception $e) {
+            Log::error('PayPal Callback Error: ' . $e->getMessage());
+            return redirect()->route('donation')->with('error', 'An error occurred while processing payment.');
         }
-
-        if ($token)
-            $reference = $token;
-        $donation->update(['status' => 'failed', 'transaction_reference' => $reference]);
-        return redirect()->route('donation')->with('error', 'Payment failed.');
     }
+
 
 
     public function paypalCancel(Request $request)
@@ -195,19 +287,20 @@ class DonationController extends Controller
     {
         $query = Donation::query();
 
-        // Check if there is a search term
-        if ($request->has('search') && $request->get('search') !== '') {
+        // Apply search filter
+        if ($request->filled('search')) {
             $search = $request->get('search');
             $query->where(function ($q) use ($search) {
-                $q->where('donor_name', 'like', '%' . $search . '%')
-                    ->orWhere('email', 'like', '%' . $search . '%');
+                $q->where('donor_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
-        // Paginate the results
-        $donations = $query->paginate(10);
-        // Fetch donations with pagination
-        // $donations = Donation::paginate(10); // 10 donations per page
+
+        // Fetch donations sorted by latest (newest first) and paginate
+        $donations = $query->orderByDesc('created_at')->paginate(10);
+
         return view('backend.pages.donation', compact('donations'));
     }
+
 
 }

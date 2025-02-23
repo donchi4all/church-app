@@ -36,22 +36,38 @@
                                 <td>{{ $contact->email }}</td>
                                 <td>{{ Str::limit($contact->message, 50) }}</td>
                                 <td>
-                                    <div class="dropdown">
-                                        <button type="button" class="btn p-0 dropdown-toggle hide-arrow"
-                                            data-bs-toggle="dropdown">
-                                            <i class="bx bx-dots-vertical-rounded"></i>
-                                        </button>
-                                        <div class="dropdown-menu">
-                                            <a class="dropdown-item" href="javascript:void(0);">
-                                                <i class="bx bx-edit-alt me-1"></i> Edit
-                                            </a>
-                                            <a class="dropdown-item" href="javascript:void(0);">
-                                                <i class="bx bx-trash me-1"></i> Delete
-                                            </a>
-                                        </div>
-                                    </div>
+                                    <button class="btn btn-link text-primary p-0" type="button" data-bs-toggle="modal"
+                                        data-bs-target="#contactModal-{{ $contact->id }}">
+                                        View More
+                                    </button>
                                 </td>
                             </tr>
+
+                            <!-- Modal -->
+                            <div class="modal fade" id="contactModal-{{ $contact->id }}" tabindex="-1"
+                                aria-labelledby="contactModalLabel-{{ $contact->id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="contactModalLabel-{{ $contact->id }}">Contact
+                                                Message</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p><strong>First Name:</strong> {{ $contact->first_name }}</p>
+                                            <p><strong>Last Name:</strong> {{ $contact->last_name }}</p>
+                                            <p><strong>Email:</strong> {{ $contact->email }}</p>
+                                            <p><strong>Message:</strong></p>
+                                            <p class="border p-3 bg-light">{{ nl2br(e($contact->message)) }}</p>
+                                            <p><strong>Created At:</strong>
+                                                {{ optional($contact->created_at)->format('F j, Y g:i A') ?? 'N/A' }}</p>
+                                            <p><strong>Updated At:</strong>
+                                                {{ optional($contact->updated_at)->format('F j, Y g:i A') ?? 'N/A' }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         @empty
                             <tr>
                                 <td colspan="5" class="text-center">No contacts found</td>
@@ -65,6 +81,7 @@
                     {{ $contacts->links('pagination::bootstrap-4') }}
                 </div>
             </div>
+
         </div>
         <!--/ Basic Bootstrap Table -->
 

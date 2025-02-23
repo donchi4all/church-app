@@ -78,6 +78,30 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Phone and Email -->
+                    <div class="row gy-3">
+                        <div class="col-md-6 col-12">
+                            <div class="mb-3">
+                                <label class="text-black" for="email">Email</label>
+                                <input type="email" class="form-control @error('email') is-invalid @enderror"
+                                    id="email" name="email" value="{{ old('email') }}" required>
+                                @error('email')
+                                    <span class="text-danger">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-12">
+                            <div class="mb-3">
+                                <label class="text-black" for="phone">Phone Number</label>
+                                <input type="tel" class="form-control @error('phone') is-invalid @enderror"
+                                    id="phone" name="phone" value="{{ old('phone') }}" required
+                                    pattern="^\+?[0-9]{7,15}$" title="Enter a valid phone number">
+                                @error('phone')
+                                    <span class="text-danger">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- State/Country -->
                     <div class="mb-3">

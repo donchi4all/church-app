@@ -78,6 +78,11 @@
                                     <input type="email" class="form-control" id="paystack_email" name="email" required>
                                 </div>
                                 <div class="mb-3">
+                                    <label class="text-black" for="paystack_phone">Phone Number</label>
+                                    <input type="tel" class="form-control" id="paystack_phone" name="phone"
+                                        pattern="^\+?[0-9]{10,15}$" required>
+                                </div>
+                                <div class="mb-3">
                                     <label class="text-black" for="paystack_amount">Amount (₦)</label>
                                     <input type="number" class="form-control" id="paystack_amount" name="amount"
                                         step="0.01" required>
@@ -101,6 +106,11 @@
                                 <div class="mb-3">
                                     <label class="text-black" for="email">Email</label>
                                     <input type="text" class="form-control" id="email" name="email" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="text-black" for="phone">Phone Number</label>
+                                    <input type="tel" class="form-control" id="phone" name="phone"
+                                        pattern="^\+?[0-9]{10,15}$" required>
                                 </div>
                                 <div class="mb-3">
                                     <label class="text-black" for="paypal_amount">Amount (USD)</label>

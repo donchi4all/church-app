@@ -27,10 +27,8 @@
                                 <th>Donor Name</th>
                                 <th>Email</th>
                                 <th>Amount</th>
-                                <th>Currency</th>
-                                <th>Payment Method</th>
-                                <th>Transaction Reference</th>
                                 <th>Status</th>
+                                <th>Created At</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -39,36 +37,50 @@
                                 <tr>
                                     <td>{{ $donation->donor_name ?? 'N/A' }}</td>
                                     <td>{{ $donation->email ?? 'N/A' }}</td>
-                                    <td>{{ number_format($donation->amount, 2) }}</td>
-                                    <td>{{ $donation->currency }}</td>
-                                    <td>{{ ucfirst($donation->payment_method) }}</td>
-                                    <td>{{ $donation->transaction_reference ?? 'N/A' }}</td>
+                                    <td>{{ number_format($donation->amount, 2) }} {{ $donation->currency }}</td>
                                     <td>
-                                        <span
-                                            class="badge bg-label-{{ $donation->status == 'success' ? 'success' : ($donation->status == 'failed' ? 'danger' : 'warning') }} me-1">
+                                        <span class="badge bg-label-{{ $donation->status == 'success' ? 'success' : ($donation->status == 'failed' ? 'danger' : 'warning') }} me-1">
                                             {{ ucfirst($donation->status) }}
                                         </span>
                                     </td>
+                                    <td>{{ $donation->created_at ? $donation->created_at->format('F j, Y g:i A') : 'N/A' }}</td>
                                     <td>
-                                        <div class="dropdown">
-                                            <button type="button" class="btn p-0 dropdown-toggle hide-arrow"
-                                                    data-bs-toggle="dropdown">
-                                                <i class="bx bx-dots-vertical-rounded"></i>
-                                            </button>
-                                            <div class="dropdown-menu">
-                                                <a class="dropdown-item" href="javascript:void(0);">
-                                                    <i class="bx bx-edit-alt me-1"></i> Edit
-                                                </a>
-                                                <a class="dropdown-item" href="javascript:void(0);">
-                                                    <i class="bx bx-trash me-1"></i> Delete
-                                                </a>
-                                            </div>
-                                        </div>
+                                        <button class="btn btn-link text-primary p-0" type="button" data-bs-toggle="modal"
+                                            data-bs-target="#donationModal-{{ $donation->id }}">
+                                            View More
+                                        </button>
                                     </td>
                                 </tr>
+
+                                <!-- Modal -->
+                                <div class="modal fade" id="donationModal-{{ $donation->id }}" tabindex="-1" aria-labelledby="donationModalLabel-{{ $donation->id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="donationModalLabel-{{ $donation->id }}">Donation Details</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p><strong>Donor Name:</strong> {{ $donation->donor_name }}</p>
+                                                <p><strong>Email:</strong> {{ $donation->email }}</p>
+                                                <p><strong>Phone:</strong> {{ $donation->phone ?? 'N/A' }}</p>
+                                                <p><strong>Amount:</strong> {{ number_format($donation->amount, 2) }} {{ $donation->currency }}</p>
+                                                <p><strong>Payment Method:</strong> {{ ucfirst($donation->payment_method) }}</p>
+                                                <p><strong>Transaction Reference:</strong> {{ $donation->transaction_reference ?? 'N/A' }}</p>
+                                                <p><strong>Status:</strong>
+                                                    <span class="badge bg-label-{{ $donation->status == 'success' ? 'success' : ($donation->status == 'failed' ? 'danger' : 'warning') }}">
+                                                        {{ ucfirst($donation->status) }}
+                                                    </span>
+                                                </p>
+                                                <p><strong>Created At:</strong> {{ optional($donation->created_at)->format('F j, Y g:i A') ?? 'N/A' }}</p>
+                                                <p><strong>Updated At:</strong> {{ optional($donation->updated_at)->format('F j, Y g:i A') ?? 'N/A' }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center">No donations found</td>
+                                    <td colspan="6" class="text-center">No donations found</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -79,6 +91,7 @@
                         {{ $donations->links('pagination::bootstrap-4') }}
                     </div>
                 </div>
+
             </div>
             <!--/ Basic Bootstrap Table -->
 

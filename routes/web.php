@@ -8,6 +8,7 @@ use App\Http\Controllers\DonationController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PartnershipController;
 use App\Http\Controllers\PrayerRequestController;
+use App\Http\Controllers\SeoController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -28,7 +29,7 @@ Route::get('/q', function () {
 Route::get('/', [PageController::class, 'home'])->name('home');
 Route::get('/ministry', [PageController::class, 'ministry'])->name('ministry');
 Route::get('/contact', [PageController::class, 'contact'])->name('contact');
-Route::get('/sermon-single', [PageController::class, 'sermonSingle'])->name('sermon.single');
+ Route::get('/sermon-single', [PageController::class, 'sermonSingle'])->name('sermon.single');
 Route::get('/prayer-form', [PageController::class, 'prayerForm'])->name('prayer.form');
 Route::get('/partnership', [PageController::class, 'partnership'])->name('partnership');
 Route::get('/donation', [PageController::class, 'donation'])->name('donation');
@@ -94,6 +95,10 @@ Route::prefix('admin')->group(function () {
                 Route::put('{testimonial}', [DashboardController::class, 'updateTestimony'])->name('update');
                 Route::delete('{testimonial}', [DashboardController::class, 'destroyTestimony'])->name('destroy');
             });
+
+            Route::resource('seo', SeoController::class);
+            // Route::get('seo', [DashboardController::class, 'ed'])->name('admin.setting.upcoming.list');
+
 
         });
     });
